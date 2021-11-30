@@ -22,18 +22,19 @@ from torchvision import transforms as T
 
 
 class IMDBDatasets(Dataset):
-    def __init__(self, image_df, base_path, augment=False, mode='train'):
+    def __init__(self, image_df, base_path, augment=False, mode='train', input_size=64):
         self.images_df = image_df.copy()
         self.base_path = base_path
         self.mode = mode
         self.augment = augment
+        self.input_size = input_size
     
     def __len__(self):
         return len(self.images_df)
     
     def __getitem__(self, index):
         image_, image_path_ = self.read_images(index)
-        if self.mode in ['train', ]:
+        if self.mode in ['train', 'valid']:
             label = self.images_df.iloc[index].age
         else:
             label = image_path_
@@ -42,14 +43,14 @@ class IMDBDatasets(Dataset):
         
         image_ = T.Compose([
             T.ToPILImage(),
-            # T.RandomResizedCrop(self.input_size),
-            # T.RandomHorizontalFlip(),
+            T.RandomResizedCrop(self.input_size),
+            T.RandomHorizontalFlip(),
             T.ToTensor(),
             T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])])(image_)
         return image_.float(), label
     
     def read_images(self, index_):
-        filename = self.images_df.iloc[index_].Filename
+        filename = self.images_df.iloc[index_].filename
         # import ipdb
         # ipdb.set_trace()
         image_path_ = os.path.join(self.base_path, filename)
